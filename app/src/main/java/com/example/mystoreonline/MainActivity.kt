@@ -11,7 +11,9 @@ import com.example.mystoreonline.cart.ui.CartScreen
 import com.example.mystoreonline.home.ui.HomeScreen
 import com.example.mystoreonline.navigation.Routes
 import com.example.mystoreonline.ui.theme.MyStoreOnlineTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
