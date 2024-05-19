@@ -74,6 +74,12 @@ dependencies {
     //Hilt Navigation
     implementation(libs.androidx.hilt.navigation.compose)
 
+    //Coil
+    implementation(libs.coil.compose)
+
+    //LiveData
+    implementation(libs.androidx.compose.runtime.livedata)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
