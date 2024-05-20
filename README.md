@@ -32,9 +32,10 @@ adb shell dumpsys window windows | grep ActivityRecord
 This projects uses
 the [MVVM](https://developer.android.com/topic/architecture?hl=pt-br#recommended-app-arch)
 architectural pattern.
-We also
+I also
 use [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 layers to separate split responsabilities and better structure architectural dependencies.
+This project is with jetpack compose, use hilt, compose navigation, unit test with mockk 
 
 ## Known Issues
 
