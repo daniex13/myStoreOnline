@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,15 +23,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,21 +74,33 @@ fun ProductDetail(product: Product?, onAddProduct: (Product?) -> Unit) {
             Row(
                 modifier = Modifier
                     .padding(10.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .weight(1f),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     product?.title ?: "",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.5f)
                 )
-                Text(product?.price?.toString() ?: "0",
-                    fontSize = 12.sp,
+                Text(
+                    product?.price?.toString() ?: "0",
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(0.3f),
+                    textAlign = TextAlign.End
                 )
             }
-            Text(text = product?.description ?: "")
-            Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(text = product?.description ?: "", modifier = Modifier.weight(1f))
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f).padding(10.dp),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     StarRatingBar(
                         maxStars = 5,
@@ -99,7 +109,10 @@ fun ProductDetail(product: Product?, onAddProduct: (Product?) -> Unit) {
                             rating = it
                         }
                     )
-                    Text(text = product?.rating?.rate?.toString() ?: "1", modifier = Modifier.padding(start = 5.dp))
+                    Text(
+                        text = product?.rating?.rate?.toString() ?: "1",
+                        modifier = Modifier.padding(start = 5.dp)
+                    )
                     Text(text = "/" + product?.rating?.count.toString())
                 }
 
