@@ -111,8 +111,10 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             if (product != null) {
                 addOrUpdateProductFromHomeUseCase(product)
+                _textBadgeCart.value = getAllProductsFromDataBase.invoke()
+            }else{
+                _uiState.value = UiState.Error("Error")
             }
-            _textBadgeCart.value = getAllProductsFromDataBase.invoke()
         }
     }
 

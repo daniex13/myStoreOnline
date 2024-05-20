@@ -70,6 +70,7 @@ dependencies {
 
     //Dagger Hilt
     implementation(libs.dagger.hilt.android)
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
     kapt(libs.dagger.hilt.android.compiler)
 
     //Hilt Navigation
@@ -85,6 +86,8 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
+
+    testImplementation(libs.bundles.testing)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

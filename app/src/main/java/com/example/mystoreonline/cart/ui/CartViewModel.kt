@@ -9,9 +9,8 @@ import com.example.mystoreonline.cart.domain.UpdateProductCartUseCase
 import com.example.mystoreonline.cart.domain.GetProductUseCase
 import com.example.mystoreonline.cart.ui.model.CartModel
 import com.example.mystoreonline.core.util.AddOrMinus
-import com.example.mystoreonline.home.data.network.response.Product
-import com.example.mystoreonline.home.ui.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,7 +20,7 @@ import javax.inject.Inject
 class CartViewModel @Inject constructor(
     private val updateProductCartUseCase: UpdateProductCartUseCase,
     private val getProductUseCase: GetProductUseCase,
-    private val deleteProductCartUseCase: DeleteProductCartUseCase
+    private val deleteProductCartUseCase: DeleteProductCartUseCase,
 ) : ViewModel() {
 
     private val _cartUiState = MutableStateFlow<CartUiState>(CartUiState.Loading)
@@ -34,10 +33,6 @@ class CartViewModel @Inject constructor(
         viewModelScope.launch {
 
             updateProductCartUseCase(cartModel, AddOrMinus.ADD)
-
-/*            _textQuantity.value = getProductUseCase.invoke().find {
-                it.id == cartModel.id
-            }?.quantity*/
             getProductCartList()
 
         }
@@ -57,18 +52,23 @@ class CartViewModel @Inject constructor(
         }
     }
 
-    fun getProductCartList(){
+    fun getProductCartList() {
         viewModelScope.launch {
-            _cartUiState.value = CartUiState.Success(getProductUseCase.invoke())
-            getTotalPrice()
+            try {
+                _cartUiState.value = CartUiState.Success(getProductUseCase.invoke())
+                getTotalPrice()
+            } catch (e: Exception) {
+                _cartUiState.value = CartUiState.Error(e.message.toString())
+            }
         }
     }
 
-    private fun getTotalPrice(){
+    fun getTotalPrice() {
         viewModelScope.launch {
-            _totalPrice.value = getProductUseCase.invoke().sumOf {
+            val number2digits = getProductUseCase.invoke().sumOf {
                 it.price * it.quantity
             }
+            _totalPrice.value = Math.round(number2digits * 100.0) / 100.0
         }
     }
 
