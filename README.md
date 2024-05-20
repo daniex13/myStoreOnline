@@ -35,7 +35,8 @@ architectural pattern.
 I also
 use [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 layers to separate split responsabilities and better structure architectural dependencies.
-This project is with jetpack compose, use hilt, compose navigation, unit test with mockk 
+This project is with jetpack compose, use hilt, compose navigation, unit test with mockk, 
+use retrofit to call apis, storage cart with room and call url image with coil
 
 ## Known Issues
 
