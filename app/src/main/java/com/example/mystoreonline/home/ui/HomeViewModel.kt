@@ -5,6 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mystoreonline.home.data.network.response.Product
+import com.example.mystoreonline.home.domain.AddOrUpdateProductFromHomeUseCase
+import com.example.mystoreonline.home.domain.GetAllProductsFromDataBase
 import com.example.mystoreonline.home.domain.GetCategoriesListUseCase
 import com.example.mystoreonline.home.domain.GetProductDetailUseCase
 import com.example.mystoreonline.home.domain.GetProductListUseCase
@@ -20,7 +22,9 @@ class HomeViewModel @Inject constructor(
     private val getProductListUseCase: GetProductListUseCase,
     private val getProductDetailUseCase: GetProductDetailUseCase,
     private val getProductsByCategoriesUseCase: GetProductsByCategoriesUseCase,
-    private val getCategoriesListUseCase: GetCategoriesListUseCase
+    private val getCategoriesListUseCase: GetCategoriesListUseCase,
+    private val addOrUpdateProductFromHomeUseCase: AddOrUpdateProductFromHomeUseCase,
+    private val getAllProductsFromDataBase: GetAllProductsFromDataBase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -32,8 +36,14 @@ class HomeViewModel @Inject constructor(
     private val _productDetail = MutableLiveData<Product?>()
     val productDetail: LiveData<Product?> = _productDetail
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val _isCategoryAllSelected = MutableLiveData<Boolean>()
+    val isCategoryAllSelected: LiveData<Boolean> = _isCategoryAllSelected
+
+    private val _isOtherCategorySelected = MutableLiveData<String>()
+    val isOtherCategorySelected: LiveData<String> = _isOtherCategorySelected
+
+    private val _textBadgeCart = MutableLiveData<Int>()
+    val textBadgeCart: LiveData<Int> = _textBadgeCart
 
     fun onBottomSheetClose() {
         _showBottomSheet.value = false
@@ -54,6 +64,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val listCategory = getCategoriesListUseCase.invoke()
+                _textBadgeCart.value = getAllProductsFromDataBase.invoke()
                 _uiState.value = UiState.SuccessHome( listProducts = listProducts, listCategory = listCategory)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message.toString())
@@ -64,11 +75,10 @@ class HomeViewModel @Inject constructor(
     fun getProductDetail(id: String) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+
                 val detailProduct = getProductDetailUseCase.invoke(id)
                 _showBottomSheet.value = true
                 _productDetail.value = detailProduct
-                _isLoading.value = false
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message.toString())
             }
@@ -78,9 +88,14 @@ class HomeViewModel @Inject constructor(
     fun getProductByCategory(id: String) {
         viewModelScope.launch {
             try {
+                _uiState.value = UiState.Loading
                 val listProducts = if(id == "Todos"){
+                    _isCategoryAllSelected.value = true
+                    _isOtherCategorySelected.value = ""
                     getProductListUseCase.invoke()
                 }else{
+                    _isCategoryAllSelected.value = false
+                    _isOtherCategorySelected.value = id
                     getProductsByCategoriesUseCase.invoke(id)
                 }
 
@@ -89,6 +104,15 @@ class HomeViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message.toString())
             }
+        }
+    }
+
+    fun onAddOrUpdateProductToDataBase(product: Product?) {
+        viewModelScope.launch {
+            if (product != null) {
+                addOrUpdateProductFromHomeUseCase(product)
+            }
+            _textBadgeCart.value = getAllProductsFromDataBase.invoke()
         }
     }
 

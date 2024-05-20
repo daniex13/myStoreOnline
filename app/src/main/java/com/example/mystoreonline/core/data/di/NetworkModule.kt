@@ -1,4 +1,4 @@
-package com.example.mystoreonline.core.di
+package com.example.mystoreonline.core.data.di
 
 import com.example.mystoreonline.home.data.network.HomeClient
 import dagger.Module

@@ -1,9 +1,12 @@
 package com.example.mystoreonline.home.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -11,6 +14,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -35,6 +40,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,7 +62,9 @@ fun HomeScreen(onNavigateToCart: () -> Unit) {
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val showBottomSheet by viewModel.showBottomSheet.observeAsState(false)
-    val isLoading by viewModel.isLoading.observeAsState(false)
+    val textBadgeCart by viewModel.textBadgeCart.observeAsState(0)
+    val isCategoryAllSelected by viewModel.isCategoryAllSelected.observeAsState(true)
+    val isOtherCategorySelected by viewModel.isOtherCategorySelected.observeAsState("")
     val productDetail by viewModel.productDetail.observeAsState(null)
     val uiState = viewModel.uiState.collectAsState()
 
@@ -69,8 +77,11 @@ fun HomeScreen(onNavigateToCart: () -> Unit) {
         showBottomSheet,
         viewModel::onBottomSheetClose,
         productDetail,
-        isLoading,
-        viewModel::getProductByCategory
+        viewModel::getProductByCategory,
+        isCategoryAllSelected,
+        isOtherCategorySelected,
+        textBadgeCart,
+        viewModel::onAddOrUpdateProductToDataBase
     )
 }
 
@@ -84,13 +95,14 @@ fun HomeScreenStateless(
     showBottomSheet: Boolean,
     onBottomSheetClose: () -> Unit,
     productDetail: Product?,
-    isLoading: Boolean,
-    onClickCategory: (category: String) -> Unit
+    onClickCategory: (category: String) -> Unit,
+    isCategoryAllSelected: Boolean,
+    isOtherCategorySelected: String,
+    textBadgeCart: Int,
+    onAddProduct: (Product?) -> Unit
 ) {
-    if (isLoading) {
-        LoadingScreen()
-    }
     when (val state = uiState.value) {
+
         is UiState.Loading -> {
             LoadingScreen()
         }
@@ -110,7 +122,11 @@ fun HomeScreenStateless(
                 showBottomSheet,
                 onBottomSheetClose,
                 productDetail,
-                onClickCategory
+                onClickCategory,
+                isCategoryAllSelected,
+                isOtherCategorySelected,
+                textBadgeCart,
+                onAddProduct
             )
         }
     }
@@ -122,7 +138,8 @@ fun LoadingScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .background(Color.White),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -141,7 +158,11 @@ private fun NavigationDrawer(
     showBottomSheet: Boolean,
     onBottomSheetClose: () -> Unit,
     productDetail: Product?,
-    onClickCategory: (category: String) -> Unit
+    onClickCategory: (category: String) -> Unit,
+    isCategoryAllSelected: Boolean,
+    isOtherCategorySelected: String,
+    textBadgeCart: Int,
+    onAddProduct: (Product?) -> Unit
 ) {
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -155,15 +176,17 @@ private fun NavigationDrawer(
                 Text("Categorias", modifier = Modifier.padding(start = 16.dp, bottom = 16.dp))
                 NavigationDrawerItem(
                     label = { Text("Todos") },
-                    selected = false,
-                    onClick = { onClickCategory("Todos")
-                        scope.launch { drawerState.close() } }
+                    selected = isCategoryAllSelected,
+                    onClick = {
+                        onClickCategory("Todos")
+                        scope.launch { drawerState.close() }
+                    }
                 )
                 LazyColumn {
                     items(listCategory.size) {
                         NavigationDrawerItem(
                             label = { Text(listCategory[it]) },
-                            selected = false,
+                            selected = isOtherCategorySelected == listCategory[it],
                             onClick = {
                                 onClickCategory(listCategory[it])
                                 scope.launch { drawerState.close() }
@@ -178,7 +201,7 @@ private fun NavigationDrawer(
         Scaffold(
             //Header
             topBar = {
-                HomeHeader(onNavigateToCart, drawerState, scope)
+                HomeHeader(onNavigateToCart, drawerState, scope, textBadgeCart)
             }) { scaffoldPadding ->
             Column(
                 modifier = Modifier
@@ -189,9 +212,9 @@ private fun NavigationDrawer(
                     listProducts = listProducts,
                     productDetail = productDetail,
                     onClickProductDetail = onClickProductDetail,
-                    scope = scope,
                     showBottomSheet = showBottomSheet,
-                    onBottomSheetClose = onBottomSheetClose
+                    onBottomSheetClose = onBottomSheetClose,
+                    onAddProduct = onAddProduct
                 )
             }
         }
@@ -200,7 +223,12 @@ private fun NavigationDrawer(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeHeader(onNavigateToCart: () -> Unit, drawerState: DrawerState, scope: CoroutineScope) {
+fun HomeHeader(
+    onNavigateToCart: () -> Unit,
+    drawerState: DrawerState,
+    scope: CoroutineScope,
+    textBadgeCart: Int
+) {
     TopAppBar(
         title = {
             Text(text = "My Store Online")
@@ -220,16 +248,53 @@ fun HomeHeader(onNavigateToCart: () -> Unit, drawerState: DrawerState, scope: Co
             }
         },
         actions = {
-            IconButton(onClick = {
-                onNavigateToCart()
-            }) {
+            CartButton(onNavigateToCart, textBadgeCart)
+        })
+
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun CartButton(onNavigateToCart: () -> Unit, textBadgeCart: Int) {
+    IconButton(
+        modifier = Modifier
+            .height(100.dp).width(100.dp),
+        onClick = {
+            onNavigateToCart()
+        }) {
+        if (textBadgeCart == 0) {
+            Icon(
+                Icons.Filled.ShoppingCart,
+                contentDescription = "ShoppingCart"
+            )
+        } else if (textBadgeCart > 99) {
+            BadgedBox(
+                badge = {
+                    Badge(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ) { Text("+99") }
+                }) {
                 Icon(
                     Icons.Filled.ShoppingCart,
                     contentDescription = "ShoppingCart"
                 )
             }
-        })
-
+        } else {
+            BadgedBox(
+                badge = {
+                    Badge(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ) { Text(textBadgeCart.toString()) }
+                }) {
+                Icon(
+                    Icons.Filled.ShoppingCart,
+                    contentDescription = "ShoppingCart"
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -237,9 +302,9 @@ fun HomeBody(
     listProducts: List<Product>,
     productDetail: Product?,
     onClickProductDetail: (id: String) -> Unit,
-    scope: CoroutineScope,
     showBottomSheet: Boolean,
     onBottomSheetClose: () -> Unit,
+    onAddProduct: (Product?) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -256,18 +321,18 @@ fun HomeBody(
                     GridItemSpan(maxCurrentLineSpan)
                 }
             ) {
-                OutStandingCard(listProducts[0], {}) {
+                OutStandingCard(listProducts[0], onAddProduct) {
                     onClickProductDetail(it.id.toString())
                 }
 
             }
             items(listProducts.size - 1) {
-                StandardCard(listProducts[it + 1], {}) { cardSelected ->
+                StandardCard(listProducts[it + 1], onAddProduct) { cardSelected ->
                     onClickProductDetail(cardSelected.id.toString())
                 }
             }
         }
-        BottomSheetDetail(productDetail, scope, showBottomSheet, onBottomSheetClose)
+        BottomSheetDetail(productDetail, showBottomSheet, onBottomSheetClose, onAddProduct)
     }
 
 }
@@ -276,9 +341,9 @@ fun HomeBody(
 @Composable
 fun BottomSheetDetail(
     productDetail: Product?,
-    scope: CoroutineScope,
     showBottomSheet: Boolean,
-    onBottomSheetClose: () -> Unit
+    onBottomSheetClose: () -> Unit,
+    onAddProduct: (Product?) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -291,7 +356,7 @@ fun BottomSheetDetail(
             sheetState = sheetState
         ) {
             // Sheet content
-            ProductDetail(productDetail)
+            ProductDetail(productDetail, onAddProduct)
         }
     }
 }

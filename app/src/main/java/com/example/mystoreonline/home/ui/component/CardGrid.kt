@@ -34,7 +34,7 @@ import com.example.mystoreonline.home.data.network.response.Rating
 import com.example.mystoreonline.ui.theme.MyStoreOnlineTheme
 
 @Composable
-fun OutStandingCard(product: Product, onClickFavButton: () -> Unit, onClickCard: (product:Product) -> Unit) {
+fun OutStandingCard(product: Product, onClickFavButton: (Product?) -> Unit, onClickCard: (product:Product) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -81,7 +81,7 @@ fun OutStandingCard(product: Product, onClickFavButton: () -> Unit, onClickCard:
                 )
             }
             FloatingActionButton(
-                onClick = { onClickFavButton },
+                onClick = { onClickFavButton(product) },
                 modifier = Modifier
                     .width(50.dp)
                     .height(50.dp)
@@ -96,7 +96,7 @@ fun OutStandingCard(product: Product, onClickFavButton: () -> Unit, onClickCard:
 }
 
 @Composable
-fun StandardCard(product: Product, onClickFavButton: () -> Unit, onClickCard: (product: Product) -> Unit) {
+fun StandardCard(product: Product, onClickFavButton: (Product?) -> Unit, onClickCard: (product: Product) -> Unit) {
     Card(
         modifier = Modifier
             .height(200.dp)
@@ -134,7 +134,7 @@ fun StandardCard(product: Product, onClickFavButton: () -> Unit, onClickCard: (p
             ) {
                 Text(text = "$" + product.price.toString(), fontSize = 12.sp, maxLines = 1)
                 FloatingActionButton(
-                    onClick = { onClickFavButton }, shape = CircleShape,
+                    onClick = { onClickFavButton(product) }, shape = CircleShape,
                     modifier = Modifier
                         .width(25.dp)
                         .height(25.dp)

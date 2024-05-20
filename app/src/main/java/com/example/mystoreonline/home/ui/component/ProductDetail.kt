@@ -39,10 +39,11 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.mystoreonline.home.data.network.response.Product
 import com.example.mystoreonline.ui.theme.MyStoreOnlineTheme
+import kotlin.math.roundToInt
 
 @Composable
-fun ProductDetail(product: Product?) {
-    var rating by remember { mutableFloatStateOf(1f) } //default rating will be 1
+fun ProductDetail(product: Product?, onAddProduct: (Product?) -> Unit) {
+    var rating by remember { mutableFloatStateOf(1f) }
 
     Column(
         modifier = Modifier
@@ -53,20 +54,22 @@ fun ProductDetail(product: Product?) {
             modifier = Modifier
                 .padding(top = 20.dp, start = 20.dp, end = 20.dp)
                 .fillMaxWidth()
-                .weight(0.7f).align(Alignment.CenterHorizontally)
+                .weight(0.7f)
+                .align(Alignment.CenterHorizontally)
         ) {
             AsyncImage(
                 model = product?.image,
                 contentDescription = null,
                 modifier = Modifier
                     .padding(horizontal = 10.dp, vertical = 5.dp)
-                    .border(1.dp, Color.Black).align(Alignment.Center),
+                    .border(1.dp, Color.Black)
+                    .align(Alignment.Center),
                 contentScale = ContentScale.Fit
             )
         }
         Column(
             modifier = Modifier
-                .padding(10.dp)
+                .padding(start = 10.dp, end = 10.dp)
                 .fillMaxSize()
                 .weight(1f)
         ) {
@@ -88,15 +91,20 @@ fun ProductDetail(product: Product?) {
             }
             Text(text = product?.description ?: "")
             Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween) {
-                StarRatingBar(
-                    maxStars = 5,
-                    rating = product?.rating?.rate?.toFloat() ?: 1f,
-                    onRatingChanged = {
-                        rating = it
-                    }
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StarRatingBar(
+                        maxStars = 5,
+                        rating = product?.rating?.rate?.roundToInt() ?: 1,
+                        onRatingChanged = {
+                            rating = it
+                        }
+                    )
+                    Text(text = product?.rating?.rate?.toString() ?: "1", modifier = Modifier.padding(start = 5.dp))
+                    Text(text = "/" + product?.rating?.count.toString())
+                }
+
                 FloatingActionButton(
-                    onClick = {  },
+                    onClick = { onAddProduct(product) },
                     modifier = Modifier
                         .width(50.dp)
                         .height(50.dp)
@@ -115,12 +123,9 @@ fun ProductDetail(product: Product?) {
 @Composable
 fun StarRatingBar(
     maxStars: Int = 5,
-    rating: Float,
+    rating: Int,
     onRatingChanged: (Float) -> Unit
 ) {
-    val density = LocalDensity.current.density
-    val starSize = (12f * density).dp
-    val starSpacing = (0.5f * density).dp
 
     Row(
         modifier = Modifier.selectableGroup(),
@@ -129,11 +134,9 @@ fun StarRatingBar(
         for (i in 1..maxStars) {
             val isSelected = i <= rating
             val icon = if (isSelected) Icons.Filled.Star else Icons.TwoTone.Star
-            //val iconTintColor = if (isSelected) Color(0xFFFFC700) else Color(0x20FFFFFF)
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                //tint = iconTintColor,
                 modifier = Modifier
                     .selectable(
                         selected = isSelected,
@@ -141,12 +144,8 @@ fun StarRatingBar(
                             onRatingChanged(i.toFloat())
                         }
                     )
-                    .width(starSize).height(starSize)
             )
 
-            if (i < maxStars) {
-                Spacer(modifier = Modifier.width(starSpacing))
-            }
         }
     }
 }
